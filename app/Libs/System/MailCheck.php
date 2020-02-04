@@ -11,7 +11,7 @@ namespace App\Libs\System;
  *
  * @package App\Libs\System;
  */
-class Mail
+class MailCheck
 {
     /**
      * Check Mail Environments
