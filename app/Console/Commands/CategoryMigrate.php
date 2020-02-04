@@ -6,6 +6,7 @@ use App\Categories;
 use App\Exceptions\PatternDoesNotMatch;
 use App\Libs\Dynamics\Category;
 use App\Libs\Filesystem\FSInfo;
+use App\Libs\System\MailCheck;
 use App\Mail\CategoryMigrationReportMail;
 use App\Imports\CategoriesImport;
 use Carbon\Carbon;
@@ -217,14 +218,16 @@ class CategoryMigrate extends Command
         $this->info('Category migration completed.');
 
         //region Prepare mailable contents
-
-        // Info: Mailable class has `Queueable` bus. This will affect the processing when the QUEUE_DRIVER in the environment is changed.
-        $mailable = new CategoryMigrationReportMail([
-            'last_import_key' => $this->migFileTS,
-            'total_count'     => count($categories),
-        ]);
-
-        Mail::to(env('NOTIFICATION_MAIL'))->send($mailable);
+        if (MailCheck::checkEnvironments() === true) {// Info: Mailable class has `Queueable` bus. This will affect the processing when the QUEUE_DRIVER in the environment is changed.
+            $mailable = new CategoryMigrationReportMail([
+                'last_import_key' => $this->migFileTS,
+                'total_count'     => count($categories),
+            ]);
+            Mail::to(env('NOTIFICATION_MAIL'))->send($mailable);
+            $this->info("Report mail was sent...");
+        } else {
+            $this->warn("Report mail doesn't sent. Environment variables not exists");
+        }
         //endregion
     }
 
